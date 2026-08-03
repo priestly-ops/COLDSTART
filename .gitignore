@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+data/raw/
+*.parquet
+
+.env
+.env.*
+
+.DS_Store
+Thumbs.db
+
+# Large generated research artifacts
+outputs/bounded_whitening_score_distributions.csv
+outputs/calibration_tail_query_thresholds.csv
+outputs/**/*score_distributions*.csv
+outputs/**/*query_thresholds*.csv

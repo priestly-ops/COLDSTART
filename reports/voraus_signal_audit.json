@@ -1,0 +1,532 @@
+{
+  "dataset_path": "C:\\Users\\rajpr\\projects\\coldstart\\data\\raw\\voraus-ad-dataset-100hz.parquet",
+  "total_rows": 2321690,
+  "signal_column_count": 130,
+  "columns_with_nulls": {},
+  "columns_with_non_finite_values": {},
+  "constant_columns": [
+    "computed_inertia_6"
+  ],
+  "column_ranges": {
+    "robot_voltage": {
+      "minimum": 48.478702545166016,
+      "maximum": 48.66587448120117
+    },
+    "robot_current": {
+      "minimum": 0.0,
+      "maximum": 5.800739765167236
+    },
+    "io_current": {
+      "minimum": 0.04394499585032463,
+      "maximum": 0.6298783421516418
+    },
+    "system_current": {
+      "minimum": 0.0,
+      "maximum": 0.7763616442680359
+    },
+    "target_position_1": {
+      "minimum": -0.3414331376552582,
+      "maximum": 1.0893059968948364
+    },
+    "target_velocity_1": {
+      "minimum": -2.232487440109253,
+      "maximum": 2.231757164001465
+    },
+    "target_acceleration_1": {
+      "minimum": -3.665191411972046,
+      "maximum": 3.665191411972046
+    },
+    "target_torque_1": {
+      "minimum": -93.00428771972656,
+      "maximum": 114.19540405273438
+    },
+    "computed_inertia_1": {
+      "minimum": 2.229205846786499,
+      "maximum": 3.6098480224609375
+    },
+    "computed_torque_1": {
+      "minimum": -13.044553756713867,
+      "maximum": 14.411105155944824
+    },
+    "motor_position_1": {
+      "minimum": -0.3515346348285675,
+      "maximum": 1.0961979627609253
+    },
+    "motor_velocity_1": {
+      "minimum": -2.241675615310669,
+      "maximum": 2.2617504596710205
+    },
+    "joint_position_1": {
+      "minimum": -0.34976309537887573,
+      "maximum": 1.0943480730056763
+    },
+    "joint_velocity_1": {
+      "minimum": -2.283517599105835,
+      "maximum": 2.3286945819854736
+    },
+    "motor_torque_1": {
+      "minimum": -68.24004364013672,
+      "maximum": 75.90758514404297
+    },
+    "torque_sensor_a_1": {
+      "minimum": -20.32207679748535,
+      "maximum": 19.985431671142578
+    },
+    "torque_sensor_b_1": {
+      "minimum": -20.525691986083984,
+      "maximum": 19.818294525146484
+    },
+    "motor_iq_1": {
+      "minimum": -4.844717502593994,
+      "maximum": 5.387790203094482
+    },
+    "motor_id_1": {
+      "minimum": -0.6461051106452942,
+      "maximum": 0.7272756099700928
+    },
+    "power_motor_el_1": {
+      "minimum": -30.399038314819336,
+      "maximum": 169.11447143554688
+    },
+    "power_motor_mech_1": {
+      "minimum": -34.487735748291016,
+      "maximum": 165.24349975585938
+    },
+    "power_load_mech_1": {
+      "minimum": -39.98168182373047,
+      "maximum": 39.94316101074219
+    },
+    "motor_voltage_1": {
+      "minimum": -28.622663497924805,
+      "maximum": 29.4932804107666
+    },
+    "supply_voltage_1": {
+      "minimum": 47.442054748535156,
+      "maximum": 47.78379821777344
+    },
+    "brake_voltage_1": {
+      "minimum": 9.508514404296875,
+      "maximum": 12.483694076538086
+    },
+    "target_position_2": {
+      "minimum": 1.1918210983276367,
+      "maximum": 1.581279993057251
+    },
+    "target_velocity_2": {
+      "minimum": -0.7304397225379944,
+      "maximum": 0.8925443291664124
+    },
+    "target_acceleration_2": {
+      "minimum": -4.855654716491699,
+      "maximum": 4.761476993560791
+    },
+    "target_torque_2": {
+      "minimum": -73.24359130859375,
+      "maximum": 49.68564987182617
+    },
+    "computed_inertia_2": {
+      "minimum": 3.748511791229248,
+      "maximum": 5.454714775085449
+    },
+    "computed_torque_2": {
+      "minimum": 20.440454483032227,
+      "maximum": 76.36930084228516
+    },
+    "motor_position_2": {
+      "minimum": 1.1920437812805176,
+      "maximum": 1.5848844051361084
+    },
+    "motor_velocity_2": {
+      "minimum": -0.7586246728897095,
+      "maximum": 0.9059506058692932
+    },
+    "joint_position_2": {
+      "minimum": 1.1903845071792603,
+      "maximum": 1.584294080734253
+    },
+    "joint_velocity_2": {
+      "minimum": -0.7898420691490173,
+      "maximum": 0.9358011484146118
+    },
+    "motor_torque_2": {
+      "minimum": -28.743743896484375,
+      "maximum": 138.2325439453125
+    },
+    "torque_sensor_a_2": {
+      "minimum": -26.41193389892578,
+      "maximum": 76.1705551147461
+    },
+    "torque_sensor_b_2": {
+      "minimum": -27.65043830871582,
+      "maximum": 76.25093078613281
+    },
+    "motor_iq_2": {
+      "minimum": -2.0412957668304443,
+      "maximum": 9.536296844482422
+    },
+    "motor_id_2": {
+      "minimum": -0.33025386929512024,
+      "maximum": 0.5049442052841187
+    },
+    "power_motor_el_2": {
+      "minimum": -28.16309928894043,
+      "maximum": 120.47196960449219
+    },
+    "power_motor_mech_2": {
+      "minimum": -37.76760482788086,
+      "maximum": 101.51396942138672
+    },
+    "power_load_mech_2": {
+      "minimum": -37.29914855957031,
+      "maximum": 51.90461349487305
+    },
+    "motor_voltage_2": {
+      "minimum": -9.013750076293945,
+      "maximum": 13.7743558883667
+    },
+    "supply_voltage_2": {
+      "minimum": 47.24102783203125,
+      "maximum": 47.58277130126953
+    },
+    "brake_voltage_2": {
+      "minimum": 9.267282485961914,
+      "maximum": 12.242462158203125
+    },
+    "target_position_3": {
+      "minimum": 1.8610576391220093,
+      "maximum": 2.317380428314209
+    },
+    "target_velocity_3": {
+      "minimum": -0.5756843090057373,
+      "maximum": 1.056115746498108
+    },
+    "target_acceleration_3": {
+      "minimum": -3.665191411972046,
+      "maximum": 3.665191411972046
+    },
+    "target_torque_3": {
+      "minimum": -60.60897445678711,
+      "maximum": 96.29431915283203
+    },
+    "computed_inertia_3": {
+      "minimum": 2.4819774627685547,
+      "maximum": 2.578503131866455
+    },
+    "computed_torque_3": {
+      "minimum": -46.6765251159668,
+      "maximum": -24.50691032409668
+    },
+    "motor_position_3": {
+      "minimum": 1.8580747842788696,
+      "maximum": 2.318455934524536
+    },
+    "motor_velocity_3": {
+      "minimum": -0.6038240194320679,
+      "maximum": 1.0858590602874756
+    },
+    "joint_position_3": {
+      "minimum": 1.8590742349624634,
+      "maximum": 2.3189690113067627
+    },
+    "joint_velocity_3": {
+      "minimum": -0.6254018545150757,
+      "maximum": 1.078438401222229
+    },
+    "motor_torque_3": {
+      "minimum": -86.09976196289062,
+      "maximum": 38.455780029296875
+    },
+    "torque_sensor_a_3": {
+      "minimum": -52.59627151489258,
+      "maximum": 35.01249694824219
+    },
+    "torque_sensor_b_3": {
+      "minimum": -52.17994689941406,
+      "maximum": 34.426353454589844
+    },
+    "motor_iq_3": {
+      "minimum": -7.028480529785156,
+      "maximum": 3.0240795612335205
+    },
+    "motor_id_3": {
+      "minimum": -0.32711851596832275,
+      "maximum": 0.38530537486076355
+    },
+    "power_motor_el_3": {
+      "minimum": -34.61467742919922,
+      "maximum": 67.64421081542969
+    },
+    "power_motor_mech_3": {
+      "minimum": -41.5804443359375,
+      "maximum": 42.7761344909668
+    },
+    "power_load_mech_3": {
+      "minimum": -47.1190071105957,
+      "maximum": 21.685441970825195
+    },
+    "motor_voltage_3": {
+      "minimum": -9.009256362915039,
+      "maximum": 11.184834480285645
+    },
+    "supply_voltage_3": {
+      "minimum": 47.62297821044922,
+      "maximum": 47.9647216796875
+    },
+    "brake_voltage_3": {
+      "minimum": 9.46830940246582,
+      "maximum": 12.403285026550293
+    },
+    "target_position_4": {
+      "minimum": -2.578773260116577,
+      "maximum": -2.078432559967041
+    },
+    "target_velocity_4": {
+      "minimum": -1.1407595872879028,
+      "maximum": 1.4418705701828003
+    },
+    "target_acceleration_4": {
+      "minimum": -6.643359184265137,
+      "maximum": 6.552490234375
+    },
+    "target_torque_4": {
+      "minimum": -46.51811599731445,
+      "maximum": 58.986961364746094
+    },
+    "computed_inertia_4": {
+      "minimum": 0.16149121522903442,
+      "maximum": 0.16575880348682404
+    },
+    "computed_torque_4": {
+      "minimum": -8.613142013549805,
+      "maximum": -4.790608882904053
+    },
+    "motor_position_4": {
+      "minimum": -2.5819034576416016,
+      "maximum": -2.068639039993286
+    },
+    "motor_velocity_4": {
+      "minimum": -1.189051628112793,
+      "maximum": 1.5021764039993286
+    },
+    "joint_position_4": {
+      "minimum": -2.580984354019165,
+      "maximum": -2.068718671798706
+    },
+    "joint_velocity_4": {
+      "minimum": -1.2512071132659912,
+      "maximum": 1.5600097179412842
+    },
+    "motor_torque_4": {
+      "minimum": -18.438011169433594,
+      "maximum": 23.993637084960938
+    },
+    "torque_sensor_a_4": {
+      "minimum": -9.749631881713867,
+      "maximum": 18.09095001220703
+    },
+    "torque_sensor_b_4": {
+      "minimum": -9.861024856567383,
+      "maximum": 17.92039680480957
+    },
+    "motor_iq_4": {
+      "minimum": -2.002063274383545,
+      "maximum": 2.627824306488037
+    },
+    "motor_id_4": {
+      "minimum": -0.09937478601932526,
+      "maximum": 0.0806925967335701
+    },
+    "power_motor_el_4": {
+      "minimum": -7.89727783203125,
+      "maximum": 28.353187561035156
+    },
+    "power_motor_mech_4": {
+      "minimum": -8.974541664123535,
+      "maximum": 21.519380569458008
+    },
+    "power_load_mech_4": {
+      "minimum": -11.95933723449707,
+      "maximum": 10.613572120666504
+    },
+    "motor_voltage_4": {
+      "minimum": -14.69890308380127,
+      "maximum": 12.738297462463379
+    },
+    "supply_voltage_4": {
+      "minimum": 47.56266784667969,
+      "maximum": 47.92451477050781
+    },
+    "brake_voltage_4": {
+      "minimum": 9.488412857055664,
+      "maximum": 12.423385620117188
+    },
+    "target_position_5": {
+      "minimum": -1.8295618295669556,
+      "maximum": -1.5551897287368774
+    },
+    "target_velocity_5": {
+      "minimum": -0.428972065448761,
+      "maximum": 0.9235891103744507
+    },
+    "target_acceleration_5": {
+      "minimum": -3.665191411972046,
+      "maximum": 3.665191411972046
+    },
+    "target_torque_5": {
+      "minimum": -34.6553955078125,
+      "maximum": 49.88505935668945
+    },
+    "computed_inertia_5": {
+      "minimum": 0.06776489317417145,
+      "maximum": 0.06823862344026566
+    },
+    "computed_torque_5": {
+      "minimum": -1.320805549621582,
+      "maximum": 0.6183841228485107
+    },
+    "motor_position_5": {
+      "minimum": -1.8317562341690063,
+      "maximum": -1.554582118988037
+    },
+    "motor_velocity_5": {
+      "minimum": -0.44878435134887695,
+      "maximum": 0.9583448767662048
+    },
+    "joint_position_5": {
+      "minimum": -1.8311673402786255,
+      "maximum": -1.554733395576477
+    },
+    "joint_velocity_5": {
+      "minimum": -0.47900089621543884,
+      "maximum": 0.9887507557868958
+    },
+    "motor_torque_5": {
+      "minimum": -7.482546329498291,
+      "maximum": 10.303545951843262
+    },
+    "torque_sensor_a_5": {
+      "minimum": -5.178792953491211,
+      "maximum": 6.677779674530029
+    },
+    "torque_sensor_b_5": {
+      "minimum": -4.928123950958252,
+      "maximum": 6.881415367126465
+    },
+    "motor_iq_5": {
+      "minimum": -0.7904334664344788,
+      "maximum": 1.170530080795288
+    },
+    "motor_id_5": {
+      "minimum": -0.07573573291301727,
+      "maximum": 0.07298389822244644
+    },
+    "power_motor_el_5": {
+      "minimum": -2.5231151580810547,
+      "maximum": 7.555396556854248
+    },
+    "power_motor_mech_5": {
+      "minimum": -0.9736229181289673,
+      "maximum": 6.436241626739502
+    },
+    "power_load_mech_5": {
+      "minimum": -1.1003097295761108,
+      "maximum": 0.7225027084350586
+    },
+    "motor_voltage_5": {
+      "minimum": -6.478855133056641,
+      "maximum": 10.524222373962402
+    },
+    "supply_voltage_5": {
+      "minimum": 47.36164474487305,
+      "maximum": 47.74359130859375
+    },
+    "brake_voltage_5": {
+      "minimum": 9.448208808898926,
+      "maximum": 12.463593482971191
+    },
+    "target_position_6": {
+      "minimum": -0.8355873823165894,
+      "maximum": 0.6572712063789368
+    },
+    "target_velocity_6": {
+      "minimum": -2.281851053237915,
+      "maximum": 2.0360264778137207
+    },
+    "target_acceleration_6": {
+      "minimum": -3.665191411972046,
+      "maximum": 3.665191411972046
+    },
+    "target_torque_6": {
+      "minimum": -41.12907028198242,
+      "maximum": 57.428592681884766
+    },
+    "computed_inertia_6": {
+      "minimum": 0.0022111856378614902,
+      "maximum": 0.0022111856378614902
+    },
+    "computed_torque_6": {
+      "minimum": -0.006290367338806391,
+      "maximum": 0.00737216928973794
+    },
+    "motor_position_6": {
+      "minimum": -0.8441290259361267,
+      "maximum": 0.6620146632194519
+    },
+    "motor_velocity_6": {
+      "minimum": -2.3142590522766113,
+      "maximum": 2.075385332107544
+    },
+    "joint_position_6": {
+      "minimum": -0.8439701795578003,
+      "maximum": 0.6622130274772644
+    },
+    "joint_velocity_6": {
+      "minimum": -2.3298397064208984,
+      "maximum": 2.126391649246216
+    },
+    "motor_torque_6": {
+      "minimum": -13.067944526672363,
+      "maximum": 11.65926456451416
+    },
+    "torque_sensor_a_6": {
+      "minimum": -1.069434642791748,
+      "maximum": 1.4148619174957275
+    },
+    "torque_sensor_b_6": {
+      "minimum": -1.1813067197799683,
+      "maximum": 1.2503106594085693
+    },
+    "motor_iq_6": {
+      "minimum": -1.3961490392684937,
+      "maximum": 1.2937307357788086
+    },
+    "motor_id_6": {
+      "minimum": -0.11722835898399353,
+      "maximum": 0.1200985312461853
+    },
+    "power_motor_el_6": {
+      "minimum": -2.125425338745117,
+      "maximum": 30.759891510009766
+    },
+    "power_motor_mech_6": {
+      "minimum": -0.09165701270103455,
+      "maximum": 27.774944305419922
+    },
+    "power_load_mech_6": {
+      "minimum": -2.4520699977874756,
+      "maximum": 2.003087282180786
+    },
+    "motor_voltage_6": {
+      "minimum": -21.482261657714844,
+      "maximum": 20.66073226928711
+    },
+    "supply_voltage_6": {
+      "minimum": 47.522464752197266,
+      "maximum": 47.90441131591797
+    },
+    "brake_voltage_6": {
+      "minimum": 9.568821907043457,
+      "maximum": 12.544002532958984
+    }
+  }
+}

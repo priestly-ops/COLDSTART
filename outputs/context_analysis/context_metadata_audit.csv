@@ -1,0 +1,3 @@
+candidate,present,constant_within_episode,missing_episode_count,unique_healthy_target_values,unique_anomaly_values,admitted,reason
+action,True,False,0,"('0',)","('0',)",False,"Rejected: values change within at least one episode, so a single pre-decision episode context is not established."
+active,True,False,0,"('0',)","('0',)",False,"Rejected: values change within at least one episode, so a single pre-decision episode context is not established."

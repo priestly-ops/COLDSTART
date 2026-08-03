@@ -1,0 +1,13 @@
+{
+  "anomaly_label": false,
+  "category": 12,
+  "constant_signal_count": 0,
+  "episode_id": 1710,
+  "finite": true,
+  "protocol_version": "calibration-1710-intervention-v1.0.0",
+  "sample_count": 1055,
+  "sample_count_robust_z_vs_target_healthy": -1.3008016610924433,
+  "setting": 73,
+  "signal_count": 94,
+  "target_healthy_peer_count": 319
+}
