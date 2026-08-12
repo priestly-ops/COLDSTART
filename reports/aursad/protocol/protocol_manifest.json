@@ -1,0 +1,173 @@
+{
+  "protocol_version": "aursad-commissioning-protocol-v1",
+  "created_at_utc": "2026-08-03T19:49:02.063913+00:00",
+  "command": "experiments\\build_aursad_protocol.py --overwrite",
+  "input": {
+    "episode_inventory_path": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_episode_inventory.csv",
+    "episode_inventory_sha256": "c0a4a6abf70fe95e0325b5d61993d3ad8659b1f3b6cf122e62f3ec08bb080ec4",
+    "episode_count": 4094
+  },
+  "episode_unit": "sample_nr",
+  "configuration": {
+    "commissioning_grid": [
+      10,
+      25,
+      50,
+      100,
+      250,
+      500
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "master_seed": 42,
+    "calibration_count": 600,
+    "healthy_eval_count": 300,
+    "maximum_commissioning_n": 500,
+    "timestamp_policy": "exclude",
+    "include_supplementary": false,
+    "normal_label": 0,
+    "anomaly_labels": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "supplementary_label": 5
+  },
+  "partition_counts": {
+    "calibration": 600,
+    "healthy_eval": 300,
+    "anomaly_eval": 625,
+    "commissioning_reservoir": 520,
+    "excluded": 2049
+  },
+  "anomaly_evaluation_counts": [
+    {
+      "label": 1,
+      "label_name": "damaged_screw",
+      "execution_count": 221
+    },
+    {
+      "label": 2,
+      "label_name": "extra_component",
+      "execution_count": 183
+    },
+    {
+      "label": 3,
+      "label_name": "missing_screw",
+      "execution_count": 218
+    },
+    {
+      "label": 4,
+      "label_name": "damaged_thread",
+      "execution_count": 3
+    }
+  ],
+  "nonmonotonic_executions": [
+    {
+      "sample_nr": 812,
+      "label": 5,
+      "label_name": "supplementary_operation",
+      "protocol_eligible": false,
+      "exclusion_reason": "nonmonotonic_timestamps;supplementary_operation"
+    },
+    {
+      "sample_nr": 1824,
+      "label": 5,
+      "label_name": "supplementary_operation",
+      "protocol_eligible": false,
+      "exclusion_reason": "nonmonotonic_timestamps;supplementary_operation"
+    },
+    {
+      "sample_nr": 3701,
+      "label": 5,
+      "label_name": "supplementary_operation",
+      "protocol_eligible": false,
+      "exclusion_reason": "nonmonotonic_timestamps;supplementary_operation"
+    },
+    {
+      "sample_nr": 3871,
+      "label": 5,
+      "label_name": "supplementary_operation",
+      "protocol_eligible": false,
+      "exclusion_reason": "nonmonotonic_timestamps;supplementary_operation"
+    }
+  ],
+  "validation": {
+    "episode_level_membership": true,
+    "fixed_calibration_across_seeds": true,
+    "fixed_evaluation_across_seeds": true,
+    "nested_commissioning_within_seed": true,
+    "pairwise_partition_overlap_count": 0,
+    "commissioning_contains_only_label_0": true,
+    "calibration_contains_only_label_0": true,
+    "healthy_eval_contains_only_label_0": true,
+    "anomaly_eval_contains_only_labels_1_to_4": true
+  },
+  "outputs": {
+    "membership": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\aursad_protocol_membership.csv",
+    "commissioning": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\commissioning_ids.csv",
+    "calibration": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\calibration_ids.csv",
+    "healthy_eval": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\healthy_eval_ids.csv",
+    "anomaly_eval": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\anomaly_eval_ids.csv",
+    "excluded": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\excluded_ids.csv",
+    "summary": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\protocol_summary.csv",
+    "seed_commissioning_files": {
+      "0": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_00_commissioning_ids.csv",
+      "1": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_01_commissioning_ids.csv",
+      "2": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_02_commissioning_ids.csv",
+      "3": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_03_commissioning_ids.csv",
+      "4": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_04_commissioning_ids.csv",
+      "5": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_05_commissioning_ids.csv",
+      "6": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_06_commissioning_ids.csv",
+      "7": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_07_commissioning_ids.csv",
+      "8": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_08_commissioning_ids.csv",
+      "9": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_09_commissioning_ids.csv",
+      "10": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_10_commissioning_ids.csv",
+      "11": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_11_commissioning_ids.csv",
+      "12": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_12_commissioning_ids.csv",
+      "13": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_13_commissioning_ids.csv",
+      "14": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_14_commissioning_ids.csv",
+      "15": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_15_commissioning_ids.csv",
+      "16": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_16_commissioning_ids.csv",
+      "17": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_17_commissioning_ids.csv",
+      "18": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_18_commissioning_ids.csv",
+      "19": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\protocol\\seeds\\seed_19_commissioning_ids.csv"
+    }
+  },
+  "environment": {
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2"
+  },
+  "protocol_notes": [
+    "All memberships are defined at complete sample_nr execution level.",
+    "Calibration and evaluation sets are fixed across commissioning seeds.",
+    "Commissioning sets are nested within each seed.",
+    "All eligible anomaly tightening executions are used for anomaly evaluation.",
+    "Supplementary-operation label 5 is not used as healthy tightening data.",
+    "Damaged-thread label 4 has only three executions; per-class estimates for this label are underpowered.",
+    "The protocol manifest records the timestamp policy and every affected execution."
+  ]
+}

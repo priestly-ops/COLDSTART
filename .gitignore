@@ -1,14 +1,30 @@
+# Python & Virtual Environments
 .venv/
+.venv311/
 __pycache__/
 *.pyc
+
+# Testing & Cache
 .pytest_cache/
 
+# Custom Tools & Tool Artifacts
+.graphify/
+.serena/
+graphify-out/
+
+# Data & Environment
+# Raw datasets
 data/raw/
 *.parquet
+*.h5
+*.hdf5
+
+external/
 
 .env
 .env.*
 
+# OS Generated Files
 .DS_Store
 Thumbs.db
 

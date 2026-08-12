@@ -71,17 +71,52 @@ def load_cycles(
 
     selected_columns = metadata_columns + signal_columns
 
-    dataframe = pd.read_parquet(
-        path,
-        columns=selected_columns,
-    )
-
     if episode_ids is not None:
         episode_id_set = {
             int(value)
             for value in episode_ids
         }
+        filters = [
+            (
+                "sample",
+                "in",
+                sorted(episode_id_set),
+            )
+        ]
+    else:
+        episode_id_set = None
+        filters = None
 
+    if episode_id_set is not None:
+        frames: list[pd.DataFrame] = []
+        parquet = pq.ParquetFile(path)
+        for batch in parquet.iter_batches(
+            columns=selected_columns,
+            batch_size=250_000,
+        ):
+            chunk = batch.to_pandas()
+            chunk = chunk[
+                chunk["sample"].isin(episode_id_set)
+            ]
+            if not chunk.empty:
+                frames.append(chunk)
+        if frames:
+            dataframe = pd.concat(
+                frames,
+                ignore_index=True,
+            )
+        else:
+            dataframe = pd.DataFrame(
+                columns=selected_columns,
+            )
+    else:
+        dataframe = pd.read_parquet(
+            path,
+            columns=selected_columns,
+            filters=filters,
+        )
+
+    if episode_id_set is not None:
         dataframe = dataframe[
             dataframe["sample"].isin(episode_id_set)
         ]
@@ -146,5 +181,63 @@ def load_cycles(
 
     if not cycles:
         raise ValueError("No cycles were loaded.")
+
+    return cycles
+
+
+def load_cycle_metadata(path: Path) -> list[RobotCycle]:
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Dataset not found: {path}"
+        )
+
+    dataframe = pd.read_parquet(
+        path,
+        columns=[
+            "sample",
+            "anomaly",
+            "category",
+            "setting",
+        ],
+    )
+
+    cycles: list[RobotCycle] = []
+    for episode_id, cycle_df in dataframe.groupby(
+        "sample",
+        sort=True,
+    ):
+        for column in [
+            "anomaly",
+            "category",
+            "setting",
+        ]:
+            unique_count = cycle_df[column].nunique(
+                dropna=False
+            )
+            if unique_count != 1:
+                raise ValueError(
+                    f"Episode {episode_id} has "
+                    f"{unique_count} values for {column}."
+                )
+
+        cycles.append(
+            RobotCycle(
+                episode_id=int(episode_id),
+                values=np.empty((0, 0), dtype=np.float64),
+                columns=(),
+                anomaly=bool(
+                    cycle_df["anomaly"].iloc[0]
+                ),
+                category=int(
+                    cycle_df["category"].iloc[0]
+                ),
+                setting=int(
+                    cycle_df["setting"].iloc[0]
+                ),
+            )
+        )
+
+    if not cycles:
+        raise ValueError("No cycle metadata were loaded.")
 
     return cycles

@@ -1,0 +1,84 @@
+{
+  "audit_version": "aursad-episode-audit-v1",
+  "created_at_utc": "2026-08-03T19:40:08.078451+00:00",
+  "command": "experiments/audit_aursad_episodes.py --data-path C:\\Users\\rajpr\\projects\\coldstart\\data\\raw\\aursad\\AURSAD.h5",
+  "dataset": {
+    "path": "C:\\Users\\rajpr\\projects\\coldstart\\data\\raw\\aursad\\AURSAD.h5",
+    "size_bytes": 6417816949,
+    "sha256": "40ae5ce055a7f9cf399f4485bc667c81171013b3742799ed3f28f1e7243c7aea"
+  },
+  "episode_unit": "sample_nr",
+  "label_mapping": {
+    "0": "normal_tightening",
+    "1": "damaged_screw",
+    "2": "extra_component",
+    "3": "missing_screw",
+    "4": "damaged_thread",
+    "5": "supplementary_operation"
+  },
+  "audit": {
+    "row_count": 6249074,
+    "execution_count": 4094,
+    "minimum_sample_nr": 1,
+    "maximum_sample_nr": 4094,
+    "multi_label_execution_count": 0,
+    "noncontiguous_execution_count": 0,
+    "nonmonotonic_timestamp_execution_count": 4,
+    "tightening_execution_count": 2045,
+    "supplementary_execution_count": 2049,
+    "observed_execution_counts_by_label": {
+      "0": 1420,
+      "1": 221,
+      "2": 183,
+      "3": 218,
+      "4": 3,
+      "5": 2049
+    },
+    "expected_execution_counts_by_label": {
+      "0": 1420,
+      "1": 221,
+      "2": 183,
+      "3": 218,
+      "4": 3,
+      "5": 2049
+    },
+    "expected_count_match_by_label": {
+      "0": true,
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true
+    },
+    "all_expected_counts_match": true,
+    "total_execution_count_matches_expected": true,
+    "tightening_count_matches_expected": true,
+    "supplementary_count_matches_expected": true
+  },
+  "artifacts": {
+    "episode_inventory": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_episode_inventory.csv",
+    "label_execution_counts": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_label_execution_counts.csv",
+    "episode_length_summary": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_episode_length_summary.csv",
+    "runtime_state_summary": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_runtime_state_summary.csv"
+  },
+  "environment": {
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2",
+    "h5py": "3.11.0"
+  },
+  "protocol_readiness": {
+    "single_label_per_execution": true,
+    "contiguous_rows_per_execution": true,
+    "monotonic_timestamps_per_execution": false,
+    "published_counts_reproduced": true,
+    "recommended_leakage_safe_unit": "one complete sample_nr execution"
+  },
+  "limitations": [
+    "Label names are based on the predeclared mapping and must be checked against official AURSAD documentation.",
+    "Label 5 is treated as a supplementary operation class and must not automatically be used as healthy source data without a separate protocol decision.",
+    "This audit does not create source, commissioning, calibration, or evaluation memberships.",
+    "No detector has been trained."
+  ]
+}

@@ -1,0 +1,16 @@
+label,label_name,runtime_states_json,execution_count
+0,normal_tightening,"[0, 1, 2]",1168
+0,normal_tightening,"[1, 2]",250
+0,normal_tightening,"[0, 1, 2, 3, 4]",2
+1,damaged_screw,"[0, 1, 2]",182
+1,damaged_screw,"[1, 2]",38
+1,damaged_screw,"[0, 1, 2, 3, 4]",1
+2,extra_component,"[0, 1, 2]",152
+2,extra_component,"[1, 2]",31
+3,missing_screw,"[0, 1, 2]",180
+3,missing_screw,"[1, 2]",38
+4,damaged_thread,"[1, 2]",2
+4,damaged_thread,"[0, 1, 2]",1
+5,supplementary_operation,"[0, 1, 2]",1754
+5,supplementary_operation,"[1, 2]",294
+5,supplementary_operation,[1],1

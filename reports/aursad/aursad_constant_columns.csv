@@ -1,0 +1,7 @@
+column,dtype,row_count,missing_count,missing_fraction,finite_count,minimum,maximum,mean,std,unique_count_exact,unique_count_truncated,is_constant,preview_json,top_values_json
+output_bit_register_71,uint8,6249074,0,0.0,6249074,0.0,0.0,0.0,0.0,1.0,False,True,"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]","[{""value"": ""0"", ""count"": 6249074}]"
+output_bit_register_72,uint8,6249074,0,0.0,6249074,0.0,0.0,0.0,0.0,1.0,False,True,"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]","[{""value"": ""0"", ""count"": 6249074}]"
+target_speed_fraction,float64,6249074,0,0.0,6249074,1.0,1.0,1.0,0.0,1.0,False,True,"[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]","[{""value"": ""1.0"", ""count"": 6249074}]"
+actual_digital_input_bits,int64,6249074,0,0.0,6249074,0.0,0.0,0.0,0.0,1.0,False,True,"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]","[{""value"": ""0"", ""count"": 6249074}]"
+actual_digital_output_bits,int64,6249074,0,0.0,6249074,0.0,0.0,0.0,0.0,1.0,False,True,"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]","[{""value"": ""0"", ""count"": 6249074}]"
+output_int_register_24,int64,6249074,0,0.0,6249074,0.0,0.0,0.0,0.0,1.0,False,True,"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]","[{""value"": ""0"", ""count"": 6249074}]"

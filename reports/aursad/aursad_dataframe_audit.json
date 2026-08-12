@@ -1,0 +1,52 @@
+{
+  "audit_version": "aursad-dataframe-audit-v1",
+  "created_at_utc": "2026-08-03T19:29:03.893780+00:00",
+  "command": "experiments/audit_aursad_dataframe.py --data-path C:\\Users\\rajpr\\projects\\coldstart\\data\\raw\\aursad\\AURSAD.h5",
+  "dataset": {
+    "path": "C:\\Users\\rajpr\\projects\\coldstart\\data\\raw\\aursad\\AURSAD.h5",
+    "size_bytes": 6417816949,
+    "sha256": "40ae5ce055a7f9cf399f4485bc667c81171013b3742799ed3f28f1e7243c7aea"
+  },
+  "audit": {
+    "row_count": 6249074,
+    "column_count": 134,
+    "block_shapes": {
+      "block0_values": [
+        6249074,
+        7
+      ],
+      "block1_values": [
+        6249074,
+        111
+      ],
+      "block2_values": [
+        6249074,
+        15
+      ],
+      "block3_values": [
+        6249074,
+        1
+      ]
+    },
+    "candidate_column_count": 6,
+    "constant_column_count": 6
+  },
+  "artifacts": {
+    "schema": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_dataframe_schema.csv",
+    "statistics": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_column_statistics.csv",
+    "candidates": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_episode_label_candidates.csv",
+    "constants": "C:\\Users\\rajpr\\projects\\coldstart\\reports\\aursad\\aursad_constant_columns.csv"
+  },
+  "environment": {
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2",
+    "h5py": "3.11.0"
+  },
+  "limitations": [
+    "No execution identifier has yet been declared.",
+    "No leakage-safe protocol or detector split has been created.",
+    "Candidate column semantics must be verified from raw counts and documentation."
+  ]
+}
