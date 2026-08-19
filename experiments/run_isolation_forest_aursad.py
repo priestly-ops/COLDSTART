@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.feature_extractor import FeaturePreprocessor, load_feature_batch
+from src.reproducibility import reproducibility_metadata
 CACHE = ROOT / "outputs/aursad/feature_cache/aursad_features.npz"
 PROTOCOL = ROOT / "reports/aursad/protocol"
 OUTPUT = ROOT / "outputs/aursad/isolation_forest"
@@ -405,6 +406,13 @@ def main() -> None:
         "estimate": estimate,
     }, indent=2), encoding="utf-8")
 
+    protocol_input_paths = {
+        "commissioning": args.protocol_dir / "commissioning_ids.csv",
+        "calibration": args.protocol_dir / "calibration_ids.csv",
+        "healthy_eval": args.protocol_dir / "healthy_eval_ids.csv",
+        "anomaly_eval": args.protocol_dir / "anomaly_eval_ids.csv",
+    }
+
     manifest = {
         "run_version": VERSION,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -459,6 +467,25 @@ def main() -> None:
             "zero_partition_overlap": True,
         },
     }
+    manifest.update(
+        reproducibility_metadata(
+            repo_root=ROOT,
+            input_paths={
+                "feature_cache": args.cache_path,
+                **{
+                    f"protocol_{name}": path
+                    for name, path in protocol_input_paths.items()
+                },
+            },
+            artifact_paths={
+                "seed_results": seed_path,
+                "summary": summary_path,
+                "per_class_seed_results": class_seed_path,
+                "per_class_summary": class_summary_path,
+                "n_star": nstar_path,
+            },
+        )
+    )
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     print("\n" + "=" * 72)

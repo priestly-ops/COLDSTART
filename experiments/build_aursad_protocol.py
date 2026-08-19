@@ -76,6 +76,10 @@ import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.reproducibility import reproducibility_metadata
 
 DEFAULT_INVENTORY_PATH = (
     PROJECT_ROOT
@@ -1707,6 +1711,27 @@ def main() -> None:
             ),
         ],
     }
+    manifest.update(
+        reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={
+                "episode_inventory": inventory_path,
+            },
+            artifact_paths={
+                "membership": membership_path,
+                "commissioning": commissioning_path,
+                "calibration": calibration_path,
+                "healthy_eval": healthy_eval_path,
+                "anomaly_eval": anomaly_eval_path,
+                "excluded": excluded_path,
+                "summary": summary_path,
+                **{
+                    f"seed_commissioning_{idx:02d}": Path(path)
+                    for idx, path in enumerate(seed_outputs)
+                },
+            },
+        )
+    )
 
     manifest_path.write_text(
         json.dumps(

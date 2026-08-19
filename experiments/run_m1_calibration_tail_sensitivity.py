@@ -48,6 +48,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.calibration_tail import conformal_threshold_info
 from src.evaluation import fit_detector
 from src.feature_extractor import extract_feature_matrix
+from src.reproducibility import reproducibility_metadata
 from src.split_generator import SOURCE_SETTING, TARGET_SETTING
 from src.voraus_loader import RobotCycle, load_cycles
 
@@ -461,6 +462,10 @@ def main() -> None:
         "protocol_version": PROTOCOL_VERSION,
         "global_seed": GLOBAL_SEED,
         "dataset_path": str(args.data_path),
+        **reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={"dataset": args.data_path},
+        ),
         "detectors": requested_detectors,
         "seeds": list(args.seeds),
         "commissioning_sizes": list(args.commissioning),

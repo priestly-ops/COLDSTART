@@ -43,6 +43,12 @@ from typing import Any, Iterable, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.reproducibility import reproducibility_metadata
+
 LOGGER = logging.getLogger("compare_aursad_detectors")
 GLOBAL_SEED = 42
 DEFAULT_GRID = (10, 25, 50, 100, 250, 500)
@@ -963,6 +969,19 @@ def run(args: argparse.Namespace) -> int:
     audit_payload = clean_json_value(
         {
             "schema_version": "aursad-detector-comparison-v1",
+            **reproducibility_metadata(
+                repo_root=PROJECT_ROOT,
+                artifact_paths={
+                    "combined_seed_results": output_dir
+                    / "aursad_combined_seed_results.csv",
+                    "detector_comparison_by_n": output_dir
+                    / "aursad_detector_comparison_by_n.csv",
+                    "detector_comparison_overall": output_dir
+                    / "aursad_detector_comparison_overall.csv",
+                    "n_star_comparison": output_dir
+                    / "aursad_n_star_comparison.csv",
+                },
+            ),
             "global_seed": GLOBAL_SEED,
             "results_root": str(results_root),
             "output_directory": str(output_dir),

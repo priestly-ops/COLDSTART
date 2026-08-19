@@ -73,6 +73,7 @@ from src.feature_extractor import (
     FeaturePreprocessor,
     load_feature_batch,
 )
+from src.reproducibility import reproducibility_metadata
 
 DEFAULT_CACHE_PATH = (
     PROJECT_ROOT
@@ -1848,6 +1849,13 @@ def main() -> None:
         - started
     )
 
+    protocol_input_paths = {
+        "commissioning": protocol_dir / "commissioning_ids.csv",
+        "calibration": protocol_dir / "calibration_ids.csv",
+        "healthy_eval": protocol_dir / "healthy_eval_ids.csv",
+        "anomaly_eval": protocol_dir / "anomaly_eval_ids.csv",
+    }
+
     manifest = {
         "run_version": PROTOCOL_VERSION,
         "created_at_utc": (
@@ -1999,6 +2007,25 @@ def main() -> None:
             ),
         ],
     }
+    manifest.update(
+        reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={
+                "feature_cache": cache_path,
+                **{
+                    f"protocol_{name}": path
+                    for name, path in protocol_input_paths.items()
+                },
+            },
+            artifact_paths={
+                "seed_results": seed_results_path,
+                "summary": summary_path,
+                "per_class_seed_results": per_class_seed_path,
+                "per_class_summary": per_class_summary_path,
+                "n_star": n_star_path,
+            },
+        )
+    )
 
     manifest_path.write_text(
         json.dumps(

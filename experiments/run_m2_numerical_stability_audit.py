@@ -91,6 +91,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
 
 from src.feature_extractor import extract_feature_matrix, make_feature_names
+from src.reproducibility import reproducibility_metadata
 from src.split_generator import create_frozen_evaluation_split
 from src.voraus_loader import load_cycles
 
@@ -1555,7 +1556,12 @@ def main() -> None:
 
     manifest = {
         "protocol_version": PROTOCOL_VERSION,
+        **reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={"dataset": args.data_path},
+        ),
         "dataset": "voraus-AD 100Hz",
+        "dataset_path": str(args.data_path),
         "detector": "TargetOnly Gaussian Mahalanobis with Ledoit-Wolf",
         "evaluation_seed": EVALUATION_SEED,
         "commissioning_seeds": list(

@@ -65,6 +65,7 @@ from src.feature_extractor import (
     load_feature_batch,
     save_feature_batch,
 )
+from src.reproducibility import reproducibility_metadata
 
 
 DEFAULT_DATA_PATH = (
@@ -1430,6 +1431,20 @@ def main() -> None:
             ),
         ],
     }
+    metadata.update(
+        reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={
+                "raw_data": data_path,
+                "episode_inventory": inventory_path,
+                "protocol_membership": membership_path,
+            },
+            artifact_paths={
+                "feature_cache": cache_path,
+                "episode_index": episode_index_path,
+            },
+        )
+    )
 
     metadata_path.write_text(
         json.dumps(

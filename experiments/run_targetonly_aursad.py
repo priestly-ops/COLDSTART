@@ -85,6 +85,7 @@ from src.feature_extractor import (
     FeaturePreprocessor,
     load_feature_batch,
 )
+from src.reproducibility import reproducibility_metadata
 
 DEFAULT_CACHE_PATH = (
     PROJECT_ROOT
@@ -1832,6 +1833,21 @@ def main() -> None:
         - started
     )
 
+    protocol_input_paths = {
+        name: protocol_dir
+        / (
+            "commissioning_ids.csv"
+            if name == "commissioning"
+            else f"{name}_ids.csv"
+        )
+        for name in (
+            "commissioning",
+            "calibration",
+            "healthy_eval",
+            "anomaly_eval",
+        )
+    }
+
     manifest = {
         "run_version": PROTOCOL_VERSION,
         "created_at_utc": (
@@ -1913,28 +1929,13 @@ def main() -> None:
             "protocol_files": {
                 name: {
                     "path": str(
-                        protocol_dir
-                        / (
-                            "commissioning_ids.csv"
-                            if name == "commissioning"
-                            else f"{name}_ids.csv"
-                        )
+                        path
                     ),
                     "sha256": sha256_file(
-                        protocol_dir
-                        / (
-                            "commissioning_ids.csv"
-                            if name == "commissioning"
-                            else f"{name}_ids.csv"
-                        )
+                        path
                     ),
                 }
-                for name in (
-                    "commissioning",
-                    "calibration",
-                    "healthy_eval",
-                    "anomaly_eval",
-                )
+                for name, path in protocol_input_paths.items()
             },
         },
         "outputs": {
@@ -2000,6 +2001,25 @@ def main() -> None:
             ),
         ],
     }
+    manifest.update(
+        reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={
+                "feature_cache": cache_path,
+                **{
+                    f"protocol_{name}": path
+                    for name, path in protocol_input_paths.items()
+                },
+            },
+            artifact_paths={
+                "seed_results": seed_results_path,
+                "summary": summary_path,
+                "per_class_seed_results": per_class_seed_path,
+                "per_class_summary": per_class_summary_path,
+                "n_star": n_star_path,
+            },
+        )
+    )
 
     manifest_path.write_text(
         json.dumps(

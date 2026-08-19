@@ -24,12 +24,19 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Iterable
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.reproducibility import reproducibility_metadata
 
 PROTOCOL_VERSION = "m1-calibration-tail-v2.1-postprocess"
 RECALL_TARGET = 0.90
@@ -390,10 +397,23 @@ def plot_seed_recall_by_condition(seed_outcomes: pd.DataFrame, output_path: Path
     plt.close(fig)
 
 
-def write_manifest(output_dir: Path, source_manifest: dict, seed_outcomes: pd.DataFrame) -> None:
+def write_manifest(
+    output_dir: Path,
+    input_dir: Path,
+    source_manifest: dict,
+    seed_outcomes: pd.DataFrame,
+) -> None:
     manifest = {
         "protocol_version": PROTOCOL_VERSION,
+        **reproducibility_metadata(
+            repo_root=PROJECT_ROOT,
+            input_paths={
+                "source_manifest": input_dir / "m1_manifest.json",
+            },
+        ),
         "source_protocol_version": source_manifest.get("protocol_version"),
+        "source_git_commit": source_manifest.get("git_commit"),
+        "source_git_dirty": source_manifest.get("git_dirty"),
         "postprocess_only": True,
         "detector_refit": False,
         "performance_scope": "TargetOnly / all_faults / finite-sample-feasible cells only",
@@ -461,7 +481,7 @@ def main() -> None:
     plot_threshold_vs_recall(seed_outcomes, args.output_dir / "m1_v2_threshold_vs_recall_by_N.png")
     plot_seed_recall_by_condition(seed_outcomes, args.output_dir / "m1_v2_seed_recall_by_condition.png")
     plot_cell_median_elevation(group_summary, args.output_dir / "m1_v2_cell_median_elevation_vs_N.png")
-    write_manifest(args.output_dir, manifest, seed_outcomes)
+    write_manifest(args.output_dir, args.input_dir, manifest, seed_outcomes)
 
     print("M1-v2 post-processing complete. No detector refits were performed.")
     print("\nAlpha floors:")
