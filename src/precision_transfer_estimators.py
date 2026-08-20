@@ -154,7 +154,6 @@ def _solve_clime_columns(
         raise ValueError("lam must be positive.")
 
     objective = np.ones(2 * p, dtype=np.float64)
-    # Sigma(u-v)-b <= lam and -(Sigma(u-v)-b) <= lam
     a_ub = np.vstack(
         (
             np.hstack((sigma, -sigma)),
@@ -201,13 +200,6 @@ def clime_from_covariance(
     reference_column_rescale: bool = True,
     eigen_floor: float = 1e-6,
 ) -> PrecisionEstimate:
-    """CLIME-style constrained inverse estimator from a covariance matrix.
-
-    ``correlation_scale=True`` mirrors the scale-normalization used by the
-    Trans-CLIME authors' public R helper.  ``reference_column_rescale`` applies
-    their post-LP column normalization when the corresponding denominator is
-    numerically safe.
-    """
     cov = symmetrize(np.asarray(covariance, dtype=np.float64))
     if cov.ndim != 2 or cov.shape[0] != cov.shape[1]:
         raise ValueError("covariance must be square.")
@@ -269,13 +261,6 @@ def fit_robust_scaler(
     mode: Literal["target", "source", "shrink"] = "target",
     lambda_reg: float = 60.0,
 ) -> RobustScaler:
-    """Fit leakage-safe robust scaling on supplied training rows only.
-
-    ``source`` freezes source median/IQR statistics.
-    ``target`` uses target-training statistics only.
-    ``shrink`` uses the original RACE-style N/(N+lambda) interpolation for
-    centers and log-scales.  No validation rows are accepted by this API.
-    """
     target = _as_matrix(target_train, "target_train")
 
     def robust_stats(x: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -309,8 +294,6 @@ def fit_robust_scaler(
     target_weight = float(len(target) / (len(target) + float(lambda_reg)))
     source_weight = 1.0 - target_weight
     center = source_weight * source_center + target_weight * target_center
-    # Geometric interpolation avoids negative scales and behaves naturally for
-    # multiplicative scale differences.
     log_scale = source_weight * np.log(np.maximum(source_scale, EPS)) + target_weight * np.log(
         np.maximum(target_scale, EPS)
     )
@@ -333,7 +316,6 @@ def _trans_clime_core(
     p = target_fit.shape[1]
     n0 = target_fit.shape[0]
     n_source = source_fit.shape[0]
-    sigma0 = empirical_covariance(target_fit)
     sigma_a = empirical_covariance(source_fit)
 
     omega_l1 = float(np.mean(np.sum(np.abs(target_clime.raw), axis=0)))
@@ -371,7 +353,6 @@ def _columnwise_positive_transfer_aggregate(
     target_candidate: np.ndarray,
     transfer_candidate: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Reference-style two-candidate column aggregation on held-out target data."""
     x = _as_matrix(validation, "validation")
     p = x.shape[1]
     if target_candidate.shape != (p, p) or transfer_candidate.shape != (p, p):
@@ -403,7 +384,6 @@ def reference_trans_clime(
     delta_lambda: float | None = None,
     eigen_floor: float = 1e-6,
 ) -> PrecisionEstimate:
-    """Reference-style Trans-CLIME with an explicit held-out target split."""
     target_fit = _as_matrix(target_fit, "target_fit")
     target_validation = _as_matrix(target_validation, "target_validation")
     source_fit = _as_matrix(source_fit, "source_fit")
@@ -468,13 +448,6 @@ def crossfit_trans_clime(
     seed: int = 42,
     eigen_floor: float = 1e-6,
 ) -> PrecisionEstimate:
-    """COLDSTART extension: deterministic cross-fitted Trans-CLIME aggregation.
-
-    Each fold fits all target-dependent quantities on the complement and uses
-    only the held-out fold for positive-transfer aggregation.  Fold estimates
-    are averaged.  This avoids a single two-row validation split at N=10, but it
-    is an extension and must not be described as the published estimator.
-    """
     target = _as_matrix(target, "target")
     source = _as_matrix(source, "source")
     if target.shape[1] != source.shape[1]:
@@ -494,8 +467,6 @@ def crossfit_trans_clime(
     for validation_idx in folds:
         fit_idx = np.setdiff1d(all_idx, validation_idx, assume_unique=True)
         if len(fit_idx) < 2 or len(validation_idx) < 2:
-            # The reference aggregation variance is not meaningful for a one-row
-            # validation fold.  Skip rather than fabricating a risk estimate.
             continue
         est = reference_trans_clime(
             target[fit_idx],
@@ -542,7 +513,6 @@ def crossfit_trans_clime(
 
 
 def gaussian_precision_risk(x: np.ndarray, precision: np.ndarray) -> float:
-    """Per-feature Gaussian negative log-likelihood up to additive constants."""
     x = _as_matrix(x, "x")
     omega = symmetrize(np.asarray(precision, dtype=np.float64))
     sign, logdet = np.linalg.slogdet(omega)
@@ -555,7 +525,10 @@ def gaussian_precision_risk(x: np.ndarray, precision: np.ndarray) -> float:
 def relative_frobenius_error(estimate: np.ndarray, truth: np.ndarray) -> float:
     truth = np.asarray(truth, dtype=np.float64)
     estimate = np.asarray(estimate, dtype=np.float64)
-    return float(np.linalg.norm(estimate - truth, ord="fro") / max(np.linalg.norm(truth, ord="fro"), EPS))
+    return float(
+        np.linalg.norm(estimate - truth, ord="fro")
+        / max(np.linalg.norm(truth, ord="fro"), EPS)
+    )
 
 
 def max_abs_error(estimate: np.ndarray, truth: np.ndarray) -> float:
@@ -568,21 +541,43 @@ def support_metrics(
     *,
     threshold: float = 1e-6,
 ) -> dict[str, float]:
+    """Evaluate off-diagonal support recovery.
+
+    The precision-matrix diagonal is never treated as a graph edge.  When both
+    the estimated and true off-diagonal supports are empty, the supports are
+    identical; precision, recall, F1, and Jaccard are therefore defined as 1.0.
+    This explicit convention avoids reporting a perfect empty-graph match as an
+    F1 failure.  If only one support is empty, ordinary zero-division-safe
+    precision/recall semantics are used and F1 is 0.
+    """
     e = np.abs(np.asarray(estimate, dtype=np.float64)) > threshold
     t = np.abs(np.asarray(truth, dtype=np.float64)) > threshold
+    if e.shape != t.shape or e.ndim != 2 or e.shape[0] != e.shape[1]:
+        raise ValueError("estimate and truth must be square matrices of the same shape.")
+    if threshold < 0:
+        raise ValueError("threshold must be non-negative.")
+
     np.fill_diagonal(e, False)
     np.fill_diagonal(t, False)
     upper = np.triu(np.ones_like(e, dtype=bool), k=1)
     e = e & upper
     t = t & upper
+
+    estimated_edges = int(np.sum(e))
+    true_edges = int(np.sum(t))
     tp = int(np.sum(e & t))
     fp = int(np.sum(e & ~t))
     fn = int(np.sum(~e & t))
-    precision = tp / max(tp + fp, 1)
-    recall = tp / max(tp + fn, 1)
-    f1 = 2 * precision * recall / max(precision + recall, EPS)
-    union = int(np.sum(e | t))
-    jaccard = tp / union if union else 1.0
+
+    if estimated_edges == 0 and true_edges == 0:
+        precision = recall = f1 = jaccard = 1.0
+    else:
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall = tp / (tp + fn) if (tp + fn) else 0.0
+        f1 = 2.0 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+        union = int(np.sum(e | t))
+        jaccard = tp / union if union else 1.0
+
     return {
         "support_precision": float(precision),
         "support_recall": float(recall),
