@@ -21,7 +21,18 @@ No anomaly labels or synthetic truth enter RACE fitting or Safe-CV selection.
 """
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import numpy as np
+
+# When this file is executed directly as
+#   python experiments/run_p03c_robotics_covariance_stress_frozen.py
+# Python places ``experiments/`` rather than the repository root on sys.path.
+# Add the project root explicitly before importing sibling experiment modules.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from experiments import run_p03c_robotics_covariance_stress as base
 from experiments.run_p03c_harmful_regime_calibration import (
