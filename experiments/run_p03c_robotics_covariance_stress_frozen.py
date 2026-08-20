@@ -1,6 +1,6 @@
 """Final P0.3c robotics covariance stress with a frozen harmful source regime.
 
-This wrapper intentionally leaves the RACE/Safe-CV estimator unchanged.  The
+This wrapper intentionally leaves the RACE/Safe-CV estimator unchanged. The
 only change from ``run_p03c_robotics_covariance_stress.py`` is the synthetic
 negative-transfer benchmark: the development-only regime calibration selected
 ``permuted_gain_4x`` as the least-severe predeclared source construction that
@@ -8,7 +8,7 @@ was genuinely harmful against the strong target-only baseline.
 
 Calibration/evaluation separation
 ----------------------------------
-The calibration script used target seeds in the 95,000,000 namespace.  The
+The calibration script used target seeds in the 95,000,000 namespace. The
 base P0.3c runner uses the disjoint 9,000,000 namespace, so this final stress
 run does not reuse calibration target samples.
 
@@ -26,10 +26,8 @@ from pathlib import Path
 
 import numpy as np
 
-# When this file is executed directly as
-#   python experiments/run_p03c_robotics_covariance_stress_frozen.py
-# Python places ``experiments/`` rather than the repository root on sys.path.
-# Add the project root explicitly before importing sibling experiment modules.
+# When executed directly, Python places experiments/ on sys.path. Add the
+# repository root before importing sibling experiment modules.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -44,15 +42,18 @@ FROZEN_HARMFUL_CANDIDATE = "permuted_gain_4x"
 FROZEN_CALIBRATION_SEED_BASE = 20260820
 FROZEN_PERMUTATION_SEED_OFFSET = 17
 
+# Preserve the unpatched generator before main() replaces base._source_covariances.
+# Calling base._source_covariances from inside the wrapper after monkey-patching
+# would recurse back into this function indefinitely.
+_ORIGINAL_SOURCE_COVARIANCES = base._source_covariances
 
-def _frozen_source_covariances(target_cov: np.ndarray, seed: int = 20260819) -> dict[str, np.ndarray]:
-    """Return base source regimes with only adversarial replaced by frozen stress.
 
-    ``seed`` is accepted for signature compatibility with the base runner but
-    does not alter the frozen harmful regime.  The permutation is exactly the
-    one used during development calibration for a given dimensionality.
-    """
-    out = base._source_covariances(target_cov, seed=seed)
+def _frozen_source_covariances(
+    target_cov: np.ndarray,
+    seed: int = 20260819,
+) -> dict[str, np.ndarray]:
+    """Return base source regimes with only adversarial replaced by frozen stress."""
+    out = _ORIGINAL_SOURCE_COVARIANCES(target_cov, seed=seed)
     p = int(target_cov.shape[0])
 
     calibration_seed = FROZEN_CALIBRATION_SEED_BASE + p
