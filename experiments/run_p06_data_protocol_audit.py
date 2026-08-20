@@ -23,15 +23,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+# Support direct execution via:
+#   .venv/bin/python experiments/run_p06_data_protocol_audit.py
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.split_generator import SOURCE_SETTING, TARGET_SETTING
 from src.voraus_loader import load_cycle_metadata
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "raw" / "voraus-ad-dataset-100hz.parquet"
 DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / "p06_data_protocol_audit"
 PROTOCOL_VERSION = "p06-data-protocol-audit-v1"
