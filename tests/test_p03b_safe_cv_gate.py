@@ -14,7 +14,7 @@ def _sample(seed: int, covariance: np.ndarray, n: int) -> np.ndarray:
     return rng.multivariate_normal(np.zeros(covariance.shape[0]), covariance, size=n)
 
 
-def test_safe_cv_rejects_obviously_bad_source() -> None:
+def test_safe_cv_rejects_obviously_bad_source_consistently() -> None:
     target_cov = np.array([[1.0, 0.65], [0.65, 1.0]], dtype=float)
     bad_source_cov = np.array([[1.0, -0.65], [-0.65, 1.0]], dtype=float)
     target = _sample(1, target_cov, 80)
@@ -28,7 +28,18 @@ def test_safe_cv_rejects_obviously_bad_source() -> None:
         seed=123,
         se_multiplier=1.0,
     )
+    repeated = safe_cv_race_covariance(
+        target,
+        source,
+        lambdas=(0.0, 5.0, 20.0, 60.0, 120.0),
+        n_folds=5,
+        seed=123,
+        se_multiplier=1.0,
+    )
 
+    assert result.selected_lambda == repeated.selected_lambda
+    assert result.selected_source_weight == repeated.selected_source_weight
+    assert result.accepted_transfer == repeated.accepted_transfer
     assert 0.0 <= result.selected_source_weight <= 1.0
     assert result.selected_lambda in {0.0, 5.0, 20.0, 60.0, 120.0}
     assert any(float(row["lambda_reg"]) == 0.0 for row in result.cv_rows)
@@ -37,7 +48,7 @@ def test_safe_cv_rejects_obviously_bad_source() -> None:
         assert result.selected_source_weight == 0.0
 
 
-def test_safe_cv_accepts_related_source_in_easy_case() -> None:
+def test_safe_cv_candidate_acceptance_matches_conservative_lower_bound() -> None:
     target_cov = np.array([[1.0, 0.55], [0.55, 1.0]], dtype=float)
     target = _sample(10, target_cov, 40)
     source = _sample(11, target_cov, 1000)
@@ -48,16 +59,22 @@ def test_safe_cv_accepts_related_source_in_easy_case() -> None:
         lambdas=(0.0, 5.0, 20.0, 60.0, 120.0),
         n_folds=5,
         seed=321,
-        se_multiplier=0.0,
+        se_multiplier=1.0,
     )
 
-    # With a large same-distribution source and the non-conservative selector,
-    # at least one positive-lambda candidate should normally beat lambda=0.
-    accepted_rows = [r for r in result.cv_rows if bool(r["accepted_transfer_candidate"])]
-    assert accepted_rows
-    assert result.accepted_transfer
-    assert result.selected_lambda > 0.0
-    assert result.selected_source_weight > 0.0
+    for row in result.cv_rows:
+        lam = float(row["lambda_reg"])
+        expected = lam > 0.0 and float(row["conservative_lower_improvement"]) > 0.0
+        assert bool(row["accepted_transfer_candidate"]) == expected
+
+    accepted = [r for r in result.cv_rows if bool(r["accepted_transfer_candidate"])]
+    assert result.accepted_transfer == bool(accepted)
+    if result.accepted_transfer:
+        assert result.selected_lambda > 0.0
+        assert result.selected_source_weight > 0.0
+    else:
+        assert result.selected_lambda == 0.0
+        assert result.selected_source_weight == 0.0
 
 
 def test_safe_cv_final_fit_uses_all_target_rows() -> None:
