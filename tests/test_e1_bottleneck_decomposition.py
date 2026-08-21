@@ -146,11 +146,11 @@ def test_deployed_success_cannot_contradict_oracle_infeasibility() -> None:
 
 
 def test_oracle_uses_strict_greater_than_threshold_tie_convention() -> None:
-    # At threshold=1.0, healthy scores tied at 1.0 are not false positives and
-    # anomaly scores tied at 1.0 are not detections because the deployed rule
-    # is score > threshold, not >= threshold.
-    healthy = np.array([0.0] * 99 + [1.0])
-    anomaly = np.array([1.0] * 10 + [2.0] * 90)
+    # At threshold=1.0, every healthy score tied at 1.0 is a non-alarm and
+    # anomaly scores tied at 1.0 are also non-alarms because the deployed rule
+    # is score > threshold, not >= threshold. The 90 scores at 2.0 are alarms.
+    healthy = np.ones(100, dtype=np.float64)
+    anomaly = np.array([1.0] * 10 + [2.0] * 90, dtype=np.float64)
     oracle = _oracle(healthy, anomaly)
 
     assert oracle.empirically_feasible
