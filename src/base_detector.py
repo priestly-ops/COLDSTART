@@ -8,6 +8,29 @@ import numpy as np
 from src.calibration_tail import conformal_threshold_info
 
 
+def deterministic_conformal_threshold(
+    scores: np.ndarray,
+    alpha: float,
+) -> tuple[float, int, str]:
+    """Return the frozen threshold, 1-indexed rank, and regime.
+
+    This is a thin functional wrapper around ``conformal_threshold_info`` so
+    non-``BaseDetector`` models such as MVT-Flow use exactly the same
+    deterministic split-conformal rule as the E0/E1 detectors.
+    """
+    info = conformal_threshold_info(
+        BaseDetector._validate_scores(scores),
+        alpha=alpha,
+    )
+    if not info.finite_sample_feasible:
+        regime = "infinite"
+    elif info.threshold_is_maximum:
+        regime = "maximum"
+    else:
+        regime = "submaximum"
+    return float(info.strict_threshold), int(info.raw_rank), regime
+
+
 class BaseDetector(ABC):
     """Common interface for all cycle-level anomaly detectors.
 
