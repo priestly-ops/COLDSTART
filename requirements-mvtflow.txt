@@ -1,0 +1,5 @@
+# E2 MVT-Flow dependencies for Python 3.11.
+# Keep separate from the stable COLDSTART statistical environment.
+torch==2.5.1
+pydantic==1.10.20
+FrEIA @ git+https://github.com/VLL-HD/FrEIA@14484f1f875d5c4fedb9c4ff9d7eaa3f276bf150
