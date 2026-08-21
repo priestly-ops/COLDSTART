@@ -5,6 +5,8 @@ from typing import Any
 
 import numpy as np
 
+from src.calibration_tail import conformal_threshold_info
+
 
 class BaseDetector(ABC):
     """Common interface for all cycle-level anomaly detectors.
@@ -23,6 +25,9 @@ class BaseDetector(ABC):
 
         self.false_alert_budget = float(false_alert_budget)
         self.threshold_: float | None = None
+        self.calibration_rank_: int | None = None
+        self.calibration_regime_: str | None = None
+        self.calibration_size_: int | None = None
         self.is_fitted_: bool = False
         self.is_calibrated_: bool = False
 
@@ -41,17 +46,44 @@ class BaseDetector(ABC):
     ) -> np.ndarray:
         """Return one anomaly score per input cycle."""
 
+    def _calibrate_scores(
+        self,
+        scores: np.ndarray,
+    ) -> "BaseDetector":
+        """Apply the frozen deterministic nonrandomized conformal rule."""
+        values = self._validate_scores(scores)
+        info = conformal_threshold_info(
+            values,
+            alpha=self.false_alert_budget,
+        )
+
+        self.threshold_ = float(info.strict_threshold)
+        self.calibration_rank_ = int(info.raw_rank)
+        self.calibration_size_ = int(info.calibration_size)
+
+        if not info.finite_sample_feasible:
+            self.calibration_regime_ = "infinite"
+        elif info.threshold_is_maximum:
+            self.calibration_regime_ = "maximum"
+        else:
+            self.calibration_regime_ = "submaximum"
+
+        self.is_calibrated_ = True
+        return self
+
     def calibrate(
         self,
         calibration_features: np.ndarray,
     ) -> "BaseDetector":
-        """Fit a split-conformal threshold on healthy calibration data.
+        """Fit the frozen split-conformal threshold on healthy data.
 
-        Uses the finite-sample conformal order statistic:
+        The calibration target is alpha == false_alert_budget. The requested
+        one-indexed order-statistic rank is
 
-            ceil((n + 1) * (1 - alpha))
+            ceil((m + 1) * (1 - alpha)).
 
-        where alpha is the allowed false-alert rate.
+        If that rank exceeds m, the strict deterministic threshold is +inf,
+        which produces no alarms for finite anomaly scores.
         """
         if not self.is_fitted_:
             raise RuntimeError(
@@ -59,14 +91,8 @@ class BaseDetector(ABC):
             )
 
         scores = self.score_samples(calibration_features)
-        scores = self._validate_scores(scores)
+        return self._calibrate_scores(scores)
 
-        self.threshold_ = self.conformal_quantile(
-            scores=scores,
-            alpha=self.false_alert_budget,
-        )
-        self.is_calibrated_ = True
-        return self
     def calibrate_from_scores(
         self,
         calibration_scores: np.ndarray,
@@ -77,17 +103,7 @@ class BaseDetector(ABC):
                 "Detector must be fitted before calibration."
             )
 
-        scores = self._validate_scores(
-            calibration_scores
-        )
-
-        self.threshold_ = self.conformal_quantile(
-            scores=scores,
-            alpha=self.false_alert_budget,
-        )
-
-        self.is_calibrated_ = True
-        return self
+        return self._calibrate_scores(calibration_scores)
 
     def predict(
         self,
@@ -107,35 +123,12 @@ class BaseDetector(ABC):
         scores: np.ndarray,
         alpha: float,
     ) -> float:
-        """Return the finite-sample split-conformal threshold.
-
-    The threshold is the k-th ordered healthy calibration score, where
-
-        k = ceil((n + 1) * (1 - alpha))
-
-    If k > n, deterministic split conformal cannot provide the requested
-    coverage with the available calibration size. In that case the largest
-    calibration score is returned and the result is conservative.
-    """
-        scores = BaseDetector._validate_scores(scores)
-
-        if not 0.0 < alpha < 1.0:
-            raise ValueError("alpha must be between 0 and 1.")
-
-        sorted_scores = np.sort(scores)
-        sample_count = len(sorted_scores)
-
-        rank = int(
-            np.ceil(
-                (sample_count + 1)
-                * (1.0 - alpha)
-            )
+        """Return the frozen strict finite-sample conformal threshold."""
+        info = conformal_threshold_info(
+            BaseDetector._validate_scores(scores),
+            alpha=alpha,
         )
-
-        if rank > sample_count:
-            rank = sample_count
-
-        return float(sorted_scores[rank - 1])
+        return float(info.strict_threshold)
 
     @staticmethod
     def _validate_features(
@@ -178,6 +171,9 @@ class BaseDetector(ABC):
         return {
             "false_alert_budget": self.false_alert_budget,
             "threshold": self.threshold_,
+            "calibration_rank": self.calibration_rank_,
+            "calibration_regime": self.calibration_regime_,
+            "calibration_size": self.calibration_size_,
             "is_fitted": self.is_fitted_,
             "is_calibrated": self.is_calibrated_,
         }
