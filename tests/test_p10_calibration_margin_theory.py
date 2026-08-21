@@ -32,7 +32,10 @@ def test_one_percent_landmarks_are_exact():
     table = _make_rank_table(250, (0.01,))
     landmarks = _landmarks(table)
     row = landmarks.iloc[0]
-    assert int(row.minimum_calibration_for_finite_threshold) == 100
+    # For m=99, k=ceil(100 * 0.99)=99, so a finite threshold is already feasible.
+    # The threshold remains the sample maximum through m=198; the first non-max
+    # threshold occurs at m=199, where k=198 < 199.
+    assert int(row.minimum_calibration_for_finite_threshold) == 99
     assert int(row.minimum_calibration_for_nonmax_threshold) == 199
     assert int(row.largest_calibration_still_forced_to_maximum) == 198
 
@@ -41,7 +44,8 @@ def test_half_percent_landmarks_are_exact():
     table = _make_rank_table(500, (0.005,))
     landmarks = _landmarks(table)
     row = landmarks.iloc[0]
-    assert int(row.minimum_calibration_for_finite_threshold) == 200
+    # For m=199, k=ceil(200 * 0.995)=199. The first non-max threshold is m=399.
+    assert int(row.minimum_calibration_for_finite_threshold) == 199
     assert int(row.minimum_calibration_for_nonmax_threshold) == 399
     assert int(row.largest_calibration_still_forced_to_maximum) == 398
 
