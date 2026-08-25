@@ -6,6 +6,7 @@ from typing import Callable, Sequence
 import numpy as np
 
 from src.base_detector import BaseDetector
+from src.certification import certify_operating_point
 from src.detectors import (
     PooledDetector,
     RACEDetector,
@@ -27,6 +28,21 @@ class EvaluationResult:
     false_positive_rate: float
     recall: float
     success: bool
+    empirical_success: bool
+    certified_success: bool
+    tp: int
+    fn: int
+    fp: int
+    tn: int
+    recall_lower: float
+    fpr_upper: float
+    joint_confidence: float
+    delta_recall: float
+    delta_fpr: float
+    calibration_alpha: float
+    conformal_rank: int
+    conformal_regime: str
+    calibration_size: int
     threshold: float
     retained_features: int
     target_weight: float | None
@@ -194,8 +210,9 @@ def evaluate_detector(
     seed: int,
     false_alert_budget: float = 0.01,
     recall_target: float = 0.90,
+    joint_confidence: float = 0.95,
 ) -> EvaluationResult:
-    """Fit, calibrate, and evaluate one detector."""
+    """Fit, calibrate, and evaluate one frozen detector replicate."""
 
     detector, preprocessor, _, _ = fit_detector(
         detector_name=detector_name,
@@ -228,17 +245,44 @@ def evaluate_detector(
         anomaly_features
     )
 
-    false_positive_rate = float(
-        np.mean(normal_predictions == 1)
+    fp = int(np.sum(normal_predictions == 1))
+    tn = int(np.sum(normal_predictions == 0))
+    tp = int(np.sum(anomaly_predictions == 1))
+    fn = int(np.sum(anomaly_predictions == 0))
+
+    false_positive_rate = float(fp / (fp + tn))
+    recall = float(tp / (tp + fn))
+
+    empirical_success = bool(
+        recall >= recall_target
+        and false_positive_rate <= false_alert_budget
     )
 
-    recall = float(
-        np.mean(anomaly_predictions == 1)
+    certification = certify_operating_point(
+        tp=tp,
+        fn=fn,
+        fp=fp,
+        tn=tn,
+        recall_target=recall_target,
+        fpr_budget=false_alert_budget,
+        joint_confidence=joint_confidence,
     )
 
     if detector.threshold_ is None:
         raise RuntimeError(
             "Detector threshold is unavailable."
+        )
+    if detector.calibration_rank_ is None:
+        raise RuntimeError(
+            "Detector calibration rank is unavailable."
+        )
+    if detector.calibration_regime_ is None:
+        raise RuntimeError(
+            "Detector calibration regime is unavailable."
+        )
+    if detector.calibration_size_ is None:
+        raise RuntimeError(
+            "Detector calibration size is unavailable."
         )
 
     target_weight: float | None = None
@@ -252,17 +296,30 @@ def evaluate_detector(
         seed=seed,
         false_positive_rate=false_positive_rate,
         recall=recall,
-        success=(
-            recall >= recall_target
-            and false_positive_rate
-            <= false_alert_budget
-        ),
+        # Preserve the historical field as empirical operating success.
+        success=empirical_success,
+        empirical_success=empirical_success,
+        certified_success=bool(certification.certified),
+        tp=tp,
+        fn=fn,
+        fp=fp,
+        tn=tn,
+        recall_lower=float(certification.recall_lower),
+        fpr_upper=float(certification.fpr_upper),
+        joint_confidence=float(certification.joint_confidence),
+        delta_recall=float(certification.delta_recall),
+        delta_fpr=float(certification.delta_fpr),
+        calibration_alpha=float(false_alert_budget),
+        conformal_rank=int(detector.calibration_rank_),
+        conformal_regime=str(detector.calibration_regime_),
+        calibration_size=int(detector.calibration_size_),
         threshold=float(detector.threshold_),
         retained_features=int(
             preprocessor.output_feature_count_
         ),
         target_weight=target_weight,
     )
+
 
 def detector_factories(
     false_alert_budget: float,
