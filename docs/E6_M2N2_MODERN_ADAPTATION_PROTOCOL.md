@@ -34,9 +34,12 @@ Window/batch/training defaults follow the official training config.
 ### Execution-level score
 
 For each execution, the time series is partitioned into windows. Channel-wise
-squared reconstruction error is averaged over channels, then the resulting
-scores are averaged over all timesteps/windows to produce one execution score.
-This aggregation is predeclared and is not tuned using anomaly labels.
+squared reconstruction error is averaged over channels, producing timestep
+anomaly scores. The **primary cycle score is the 99th percentile** of all
+resulting timestep scores in that execution. This tail-preserving aggregation
+is predeclared so localized robotic faults are not averaged away, and is not
+tuned using anomaly labels. A mean-score sensitivity can be run by setting
+`M2N2Config(cycle_score_quantile=None)`.
 
 ## Dataset/protocol
 
