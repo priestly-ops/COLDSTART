@@ -18,10 +18,7 @@ from src.voraus_loader import load_cycles
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATASET_PATH = PROJECT_ROOT / "data" / "raw" / "voraus-ad-dataset-100hz.parquet"
-OUTPUT_DIR = PROJECT_ROOT / "outputs" / "e6_m2n2"
-SEED_RESULTS_PATH = OUTPUT_DIR / "e6_seed_results.csv"
-SUMMARY_PATH = OUTPUT_DIR / "e6_summary.csv"
-MANIFEST_PATH = OUTPUT_DIR / "e6_manifest.json"
+BASE_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "e6_m2n2"
 
 PROTOCOL_VERSION = "coldstart-e6-m2n2-v1"
 SEEDS = tuple(range(20))
@@ -49,7 +46,18 @@ def _atomic_csv(df: pd.DataFrame, path: Path) -> None:
     tmp.replace(path)
 
 
-def _evaluate_frozen(*, variant: str, model: M2N2Adapter, calibration_cycles, healthy_cycles, anomaly_cycles, n_value: int, seed: int, adaptation_info: dict[str, float] | None = None) -> dict[str, Any]:
+def _evaluate_frozen(
+    *,
+    variant: str,
+    model: M2N2Adapter,
+    calibration_cycles,
+    healthy_cycles,
+    anomaly_cycles,
+    n_value: int,
+    seed: int,
+    aggregation: str,
+    adaptation_info: dict[str, float] | None = None,
+) -> dict[str, Any]:
     calibration_scores = model.score_cycles(calibration_cycles)
     healthy_scores = model.score_cycles(healthy_cycles)
     anomaly_scores = model.score_cycles(anomaly_cycles)
@@ -63,8 +71,21 @@ def _evaluate_frozen(*, variant: str, model: M2N2Adapter, calibration_cycles, he
     fn = int(len(anomaly_pred) - tp)
     recall = float(tp / (tp + fn))
     fpr = float(fp / (fp + tn))
-    bounds = certify_operating_point(tp=tp, fn=fn, fp=fp, tn=tn, recall_target=R0, fpr_budget=B, joint_confidence=CONFIDENCE)
-    oracle = empirical_oracle_feasibility(healthy_scores=healthy_scores, anomaly_scores=anomaly_scores, false_alert_budget=B, recall_target=R0)
+    bounds = certify_operating_point(
+        tp=tp,
+        fn=fn,
+        fp=fp,
+        tn=tn,
+        recall_target=R0,
+        fpr_budget=B,
+        joint_confidence=CONFIDENCE,
+    )
+    oracle = empirical_oracle_feasibility(
+        healthy_scores=healthy_scores,
+        anomaly_scores=anomaly_scores,
+        false_alert_budget=B,
+        recall_target=R0,
+    )
     bottleneck = classify_bottleneck(
         oracle=oracle,
         deployed_recall=recall,
@@ -76,6 +97,7 @@ def _evaluate_frozen(*, variant: str, model: M2N2Adapter, calibration_cycles, he
     )
     row: dict[str, Any] = {
         "protocol_version": PROTOCOL_VERSION,
+        "cycle_score_aggregation": aggregation,
         "variant": variant,
         "commissioning_size": int(n_value),
         "seed": int(seed),
@@ -85,8 +107,15 @@ def _evaluate_frozen(*, variant: str, model: M2N2Adapter, calibration_cycles, he
         "anomaly_eval_count": len(anomaly_scores),
         "threshold": threshold,
         "conformal_rank": int(info.raw_rank),
-        "conformal_regime": "infinite" if not info.finite_sample_feasible else "maximum" if info.threshold_is_maximum else "submaximum",
-        "tp": tp, "fn": fn, "fp": fp, "tn": tn,
+        "conformal_regime": (
+            "infinite" if not info.finite_sample_feasible
+            else "maximum" if info.threshold_is_maximum
+            else "submaximum"
+        ),
+        "tp": tp,
+        "fn": fn,
+        "fp": fp,
+        "tn": tn,
         "recall": recall,
         "false_positive_rate": fpr,
         "recall_lower": float(bounds.recall_lower),
@@ -105,8 +134,20 @@ def _evaluate_frozen(*, variant: str, model: M2N2Adapter, calibration_cycles, he
     return row
 
 
-def _evaluate_online(*, model: M2N2Adapter, threshold: float, healthy_cycles, anomaly_cycles, n_value: int, seed: int) -> dict[str, Any]:
-    stream = sorted(list(healthy_cycles) + list(anomaly_cycles), key=lambda c: int(c.episode_id))
+def _evaluate_online(
+    *,
+    model: M2N2Adapter,
+    threshold: float,
+    healthy_cycles,
+    anomaly_cycles,
+    n_value: int,
+    seed: int,
+    aggregation: str,
+) -> dict[str, Any]:
+    stream = sorted(
+        list(healthy_cycles) + list(anomaly_cycles),
+        key=lambda c: int(c.episode_id),
+    )
     ids, scores, online_info = model.online_score_and_adapt(stream)
     score_by_id = {int(i): float(s) for i, s in zip(ids, scores)}
     healthy_scores = np.asarray([score_by_id[int(c.episode_id)] for c in healthy_cycles])
@@ -117,10 +158,22 @@ def _evaluate_online(*, model: M2N2Adapter, threshold: float, healthy_cycles, an
     fn = int(len(anomaly_scores) - tp)
     recall = float(tp / (tp + fn))
     fpr = float(fp / (fp + tn))
-    oracle = empirical_oracle_feasibility(healthy_scores=healthy_scores, anomaly_scores=anomaly_scores, false_alert_budget=B, recall_target=R0)
-    label = "representation_limited" if not oracle.empirically_feasible else "online_operating_point_limited" if not (recall >= R0 and fpr <= B) else "empirically_successful_uncertified_online"
+    oracle = empirical_oracle_feasibility(
+        healthy_scores=healthy_scores,
+        anomaly_scores=anomaly_scores,
+        false_alert_budget=B,
+        recall_target=R0,
+    )
+    label = (
+        "representation_limited"
+        if not oracle.empirically_feasible
+        else "online_operating_point_limited"
+        if not (recall >= R0 and fpr <= B)
+        else "empirically_successful_uncertified_online"
+    )
     return {
         "protocol_version": PROTOCOL_VERSION,
+        "cycle_score_aggregation": aggregation,
         "variant": "M2N2-Online",
         "commissioning_size": int(n_value),
         "seed": int(seed),
@@ -131,7 +184,10 @@ def _evaluate_online(*, model: M2N2Adapter, threshold: float, healthy_cycles, an
         "threshold": float(threshold),
         "conformal_rank": 100,
         "conformal_regime": "maximum",
-        "tp": tp, "fn": fn, "fp": fp, "tn": tn,
+        "tp": tp,
+        "fn": fn,
+        "fp": fp,
+        "tn": tn,
         "recall": recall,
         "false_positive_rate": fpr,
         "recall_lower": np.nan,
@@ -150,8 +206,12 @@ def _evaluate_online(*, model: M2N2Adapter, threshold: float, healthy_cycles, an
 
 def _summary(df: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
-    for (variant, n_value), g in df.groupby(["variant", "commissioning_size"], sort=True):
+    for (aggregation, variant, n_value), g in df.groupby(
+        ["cycle_score_aggregation", "variant", "commissioning_size"],
+        sort=True,
+    ):
         rows.append({
+            "cycle_score_aggregation": aggregation,
             "variant": variant,
             "commissioning_size": int(n_value),
             "n_runs": int(len(g)),
@@ -167,7 +227,9 @@ def _summary(df: pd.DataFrame) -> pd.DataFrame:
             "calibration_limited_rate": float((g.bottleneck_label == "calibration_limited").mean()),
             "certification_limited_rate": float((g.bottleneck_label == "certification_limited").mean()),
         })
-    return pd.DataFrame(rows).sort_values(["variant", "commissioning_size"]).reset_index(drop=True)
+    return pd.DataFrame(rows).sort_values(
+        ["cycle_score_aggregation", "variant", "commissioning_size"]
+    ).reset_index(drop=True)
 
 
 def main() -> None:
@@ -176,7 +238,14 @@ def main() -> None:
     parser.add_argument("--seeds", default=",".join(map(str, SEEDS)))
     parser.add_argument("--device", default="cuda" if __import__("torch").cuda.is_available() else "cpu")
     parser.add_argument("--skip-online", action="store_true")
+    parser.add_argument(
+        "--cycle-score-aggregation",
+        choices=("q99", "mean"),
+        default="q99",
+        help="Execution-level aggregation of M2N2 timestep scores. q99 is primary; mean is the predeclared sensitivity.",
+    )
     args = parser.parse_args()
+
     n_values = _parse_ints(args.n_values)
     seeds = _parse_ints(args.seeds)
     if not set(n_values).issubset(COMMISSIONING_GRID):
@@ -186,15 +255,45 @@ def main() -> None:
     if not DATASET_PATH.exists():
         raise FileNotFoundError(f"Dataset not found: {DATASET_PATH}")
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    aggregation = str(args.cycle_score_aggregation)
+    cycle_score_quantile = 0.99 if aggregation == "q99" else None
+
+    # Keep the primary q99 outputs in the historical location and write the
+    # mean sensitivity separately so a sensitivity run cannot overwrite the
+    # already-completed primary E6 results.
+    output_dir = (
+        BASE_OUTPUT_DIR
+        if aggregation == "q99"
+        else PROJECT_ROOT / "outputs" / "e6_m2n2_mean_sensitivity"
+    )
+    seed_results_path = output_dir / "e6_seed_results.csv"
+    summary_path = output_dir / "e6_summary.csv"
+    manifest_path = output_dir / "e6_manifest.json"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     cycles = load_cycles(path=DATASET_PATH, signal_set="measured")
-    source_cycles = sorted([c for c in cycles if (not c.anomaly and c.setting == SOURCE_SETTING)], key=lambda c: c.episode_id)
+    source_cycles = sorted(
+        [c for c in cycles if (not c.anomaly and c.setting == SOURCE_SETTING)],
+        key=lambda c: c.episode_id,
+    )
     if not source_cycles:
         raise RuntimeError("No healthy source cycles found")
+
     standardizer = ChannelStandardizer.fit(source_cycles)
-    cfg = M2N2Config(seed=MODEL_SEED)
-    print(f"E6: training one source M2N2 MLP on {len(source_cycles)} healthy source cycles ({args.device})")
-    source_model = M2N2Adapter(num_channels=len(source_cycles[0].columns), standardizer=standardizer, config=cfg, device=args.device).fit_source(source_cycles)
+    cfg = M2N2Config(
+        seed=MODEL_SEED,
+        cycle_score_quantile=cycle_score_quantile,
+    )
+    print(
+        f"E6: aggregation={aggregation}; training one source M2N2 MLP on "
+        f"{len(source_cycles)} healthy source cycles ({args.device})"
+    )
+    source_model = M2N2Adapter(
+        num_channels=len(source_cycles[0].columns),
+        standardizer=standardizer,
+        config=cfg,
+        device=args.device,
+    ).fit_source(source_cycles)
     print(f"E6: source pseudo-normal mask threshold={source_model.source_mask_threshold_:.8g}")
 
     rows: list[dict[str, Any]] = []
@@ -212,6 +311,7 @@ def main() -> None:
                 normal_evaluation_size=HEALTHY_EVAL_SIZE,
                 maximum_commissioning_size=MAX_COMMISSIONING_SIZE,
             )
+
             offline = source_model.clone()
             rows.append(_evaluate_frozen(
                 variant="M2N2-Offline",
@@ -221,7 +321,9 @@ def main() -> None:
                 anomaly_cycles=split.target_anomaly_evaluation,
                 n_value=n_value,
                 seed=seed,
+                aggregation=aggregation,
             ))
+
             adapted = source_model.clone()
             adapt_info = adapted.adapt_cycles(split.target_commissioning)
             adapted_row = _evaluate_frozen(
@@ -232,10 +334,16 @@ def main() -> None:
                 anomaly_cycles=split.target_anomaly_evaluation,
                 n_value=n_value,
                 seed=seed,
+                aggregation=aggregation,
                 adaptation_info=adapt_info,
             )
             rows.append(adapted_row)
-            if not args.skip_online and n_value == ONLINE_DIAGNOSTIC_N and seed in ONLINE_DIAGNOSTIC_SEEDS:
+
+            if (
+                not args.skip_online
+                and n_value == ONLINE_DIAGNOSTIC_N
+                and seed in ONLINE_DIAGNOSTIC_SEEDS
+            ):
                 online = adapted.clone()
                 rows.append(_evaluate_online(
                     model=online,
@@ -244,13 +352,21 @@ def main() -> None:
                     anomaly_cycles=split.target_anomaly_evaluation,
                     n_value=n_value,
                     seed=seed,
+                    aggregation=aggregation,
                 ))
-            _atomic_csv(pd.DataFrame(rows), SEED_RESULTS_PATH)
-            print(f"E6 {done}/{total}: N={n_value} seed={seed} adapt recall={adapted_row['recall']:.3f} FPR={adapted_row['false_positive_rate']:.3f} AUROC={adapted_row['auroc']:.3f}")
+
+            _atomic_csv(pd.DataFrame(rows), seed_results_path)
+            print(
+                f"E6 {done}/{total}: aggregation={aggregation} N={n_value} seed={seed} "
+                f"adapt recall={adapted_row['recall']:.3f} "
+                f"FPR={adapted_row['false_positive_rate']:.3f} "
+                f"AUROC={adapted_row['auroc']:.3f}"
+            )
 
     results = pd.DataFrame(rows)
     summary = _summary(results)
-    _atomic_csv(summary, SUMMARY_PATH)
+    _atomic_csv(summary, summary_path)
+
     manifest = {
         "protocol_version": PROTOCOL_VERSION,
         "paper": "Kim, Park & Choo, When Model Meets New Normals, AAAI 2024",
@@ -267,19 +383,27 @@ def main() -> None:
         "joint_confidence": CONFIDENCE,
         "model_seed": MODEL_SEED,
         "device": args.device,
+        "cycle_score_aggregation": aggregation,
+        "cycle_score_quantile": cycle_score_quantile,
         "m2n2_config": cfg.__dict__,
         "variants": {
             "M2N2-Offline": "source-trained MLP control; target calibration only; frozen at evaluation",
             "M2N2-CommissioningAdapt": "M2N2 masked self-training on target commissioning executions; frozen before target calibration/evaluation",
             "M2N2-Online": "continued label-blind adaptation during evaluation; empirical/oracle diagnostic only; no exact fixed-detector certification claim",
         },
-        "cycle_score_aggregation": "99th percentile of channel-mean timestep reconstruction error over all windows/timesteps in one execution; mean available as a predeclared sensitivity via M2N2Config(cycle_score_quantile=None)",
-        "online_diagnostic": {"N": ONLINE_DIAGNOSTIC_N, "seeds": list(ONLINE_DIAGNOSTIC_SEEDS)},
+        "aggregation_policy": {
+            "q99": "primary: 99th percentile of channel-mean timestep reconstruction errors",
+            "mean": "predeclared sensitivity: arithmetic mean of channel-mean timestep reconstruction errors",
+        },
+        "online_diagnostic": {
+            "N": ONLINE_DIAGNOSTIC_N,
+            "seeds": list(ONLINE_DIAGNOSTIC_SEEDS),
+        },
         "no_leakage": "anomaly labels never used for training/adaptation/calibration; online labels used only after scoring for metrics",
     }
-    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(summary.to_string(index=False))
-    print(f"Wrote E6 outputs to {OUTPUT_DIR}")
+    print(f"Wrote E6 outputs to {output_dir}")
 
 
 if __name__ == "__main__":
