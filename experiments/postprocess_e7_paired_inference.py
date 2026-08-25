@@ -2,15 +2,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.paired_inference import summarize_paired_deltas
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INPUT_PATH = PROJECT_ROOT / "outputs" / "e7_transfer_compatibility" / "e7_paired_results.csv"
 OUTPUT_PATH = PROJECT_ROOT / "outputs" / "e7_transfer_compatibility" / "e7_paired_inference.csv"
 MANIFEST_PATH = PROJECT_ROOT / "outputs" / "e7_transfer_compatibility" / "e7_paired_inference_manifest.json"
