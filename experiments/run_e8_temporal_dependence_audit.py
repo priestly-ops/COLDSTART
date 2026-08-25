@@ -186,8 +186,10 @@ def _seed_audit(cycles, seed: int) -> tuple[dict[str, Any], list[dict[str, Any]]
         alarm_ess = alarm_dep.effective_sample_size
         alarm_ljung_p = alarm_dep.ljung_box_pvalue
     else:
+        # A constant 0/1 sequence has zero variance, so autocorrelation and
+        # ESS are not statistically identifiable. Keep these explicitly NaN.
         alarm_lag1 = float("nan")
-        alarm_ess = float(len(alarms))
+        alarm_ess = float("nan")
         alarm_ljung_p = float("nan")
 
     row = {
@@ -312,6 +314,7 @@ def main() -> None:
             "Score-level audit uses the frozen E0 calibration/evaluation populations and excludes commissioning episodes.",
             "The moving-block bootstrap is a sensitivity analysis, not a replacement finite-sample certification guarantee.",
             "Standard conformal/binomial guarantees are not claimed under arbitrary temporal dependence.",
+            "Alarm-sequence autocorrelation/ESS is reported as NaN when the binary sequence is constant.",
         ],
     }
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
