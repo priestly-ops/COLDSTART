@@ -49,17 +49,7 @@ def _atomic_csv(df: pd.DataFrame, path: Path) -> None:
     tmp.replace(path)
 
 
-def _evaluate_frozen(
-    *,
-    variant: str,
-    model: M2N2Adapter,
-    calibration_cycles,
-    healthy_cycles,
-    anomaly_cycles,
-    n_value: int,
-    seed: int,
-    adaptation_info: dict[str, float] | None = None,
-) -> dict[str, Any]:
+def _evaluate_frozen(*, variant: str, model: M2N2Adapter, calibration_cycles, healthy_cycles, anomaly_cycles, n_value: int, seed: int, adaptation_info: dict[str, float] | None = None) -> dict[str, Any]:
     calibration_scores = model.score_cycles(calibration_cycles)
     healthy_scores = model.score_cycles(healthy_cycles)
     anomaly_scores = model.score_cycles(anomaly_cycles)
@@ -73,16 +63,8 @@ def _evaluate_frozen(
     fn = int(len(anomaly_pred) - tp)
     recall = float(tp / (tp + fn))
     fpr = float(fp / (fp + tn))
-    bounds = certify_operating_point(
-        tp=tp, fn=fn, fp=fp, tn=tn,
-        recall_target=R0, fpr_budget=B, joint_confidence=CONFIDENCE,
-    )
-    oracle = empirical_oracle_feasibility(
-        healthy_scores=healthy_scores,
-        anomaly_scores=anomaly_scores,
-        false_alert_budget=B,
-        recall_target=R0,
-    )
+    bounds = certify_operating_point(tp=tp, fn=fn, fp=fp, tn=tn, recall_target=R0, fpr_budget=B, joint_confidence=CONFIDENCE)
+    oracle = empirical_oracle_feasibility(healthy_scores=healthy_scores, anomaly_scores=anomaly_scores, false_alert_budget=B, recall_target=R0)
     bottleneck = classify_bottleneck(
         oracle=oracle,
         deployed_recall=recall,
@@ -103,11 +85,7 @@ def _evaluate_frozen(
         "anomaly_eval_count": len(anomaly_scores),
         "threshold": threshold,
         "conformal_rank": int(info.raw_rank),
-        "conformal_regime": (
-            "infinite" if not info.finite_sample_feasible
-            else "maximum" if info.threshold_is_maximum
-            else "submaximum"
-        ),
+        "conformal_regime": "infinite" if not info.finite_sample_feasible else "maximum" if info.threshold_is_maximum else "submaximum",
         "tp": tp, "fn": fn, "fp": fp, "tn": tn,
         "recall": recall,
         "false_positive_rate": fpr,
@@ -127,21 +105,8 @@ def _evaluate_frozen(
     return row
 
 
-def _evaluate_online(
-    *,
-    model: M2N2Adapter,
-    threshold: float,
-    healthy_cycles,
-    anomaly_cycles,
-    n_value: int,
-    seed: int,
-) -> dict[str, Any]:
-    # Evaluation labels are used only after the full label-blind online stream
-    # has been scored/adapted, never for adaptation decisions.
-    stream = sorted(
-        list(healthy_cycles) + list(anomaly_cycles),
-        key=lambda c: int(c.episode_id),
-    )
+def _evaluate_online(*, model: M2N2Adapter, threshold: float, healthy_cycles, anomaly_cycles, n_value: int, seed: int) -> dict[str, Any]:
+    stream = sorted(list(healthy_cycles) + list(anomaly_cycles), key=lambda c: int(c.episode_id))
     ids, scores, online_info = model.online_score_and_adapt(stream)
     score_by_id = {int(i): float(s) for i, s in zip(ids, scores)}
     healthy_scores = np.asarray([score_by_id[int(c.episode_id)] for c in healthy_cycles])
@@ -152,18 +117,8 @@ def _evaluate_online(
     fn = int(len(anomaly_scores) - tp)
     recall = float(tp / (tp + fn))
     fpr = float(fp / (fp + tn))
-    oracle = empirical_oracle_feasibility(
-        healthy_scores=healthy_scores,
-        anomaly_scores=anomaly_scores,
-        false_alert_budget=B,
-        recall_target=R0,
-    )
-    if not oracle.empirically_feasible:
-        label = "representation_limited"
-    elif not (recall >= R0 and fpr <= B):
-        label = "online_operating_point_limited"
-    else:
-        label = "empirically_successful_uncertified_online"
+    oracle = empirical_oracle_feasibility(healthy_scores=healthy_scores, anomaly_scores=anomaly_scores, false_alert_budget=B, recall_target=R0)
+    label = "representation_limited" if not oracle.empirically_feasible else "online_operating_point_limited" if not (recall >= R0 and fpr <= B) else "empirically_successful_uncertified_online"
     return {
         "protocol_version": PROTOCOL_VERSION,
         "variant": "M2N2-Online",
@@ -233,21 +188,13 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     cycles = load_cycles(path=DATASET_PATH, signal_set="measured")
-    source_cycles = sorted(
-        [c for c in cycles if (not c.anomaly and c.setting == SOURCE_SETTING)],
-        key=lambda c: c.episode_id,
-    )
+    source_cycles = sorted([c for c in cycles if (not c.anomaly and c.setting == SOURCE_SETTING)], key=lambda c: c.episode_id)
     if not source_cycles:
         raise RuntimeError("No healthy source cycles found")
     standardizer = ChannelStandardizer.fit(source_cycles)
     cfg = M2N2Config(seed=MODEL_SEED)
     print(f"E6: training one source M2N2 MLP on {len(source_cycles)} healthy source cycles ({args.device})")
-    source_model = M2N2Adapter(
-        num_channels=len(source_cycles[0].columns),
-        standardizer=standardizer,
-        config=cfg,
-        device=args.device,
-    ).fit_source(source_cycles)
+    source_model = M2N2Adapter(num_channels=len(source_cycles[0].columns), standardizer=standardizer, config=cfg, device=args.device).fit_source(source_cycles)
     print(f"E6: source pseudo-normal mask threshold={source_model.source_mask_threshold_:.8g}")
 
     rows: list[dict[str, Any]] = []
@@ -265,8 +212,6 @@ def main() -> None:
                 normal_evaluation_size=HEALTHY_EVAL_SIZE,
                 maximum_commissioning_size=MAX_COMMISSIONING_SIZE,
             )
-
-            # Same source-trained backbone, no target model adaptation.
             offline = source_model.clone()
             rows.append(_evaluate_frozen(
                 variant="M2N2-Offline",
@@ -277,9 +222,6 @@ def main() -> None:
                 n_value=n_value,
                 seed=seed,
             ))
-
-            # M2N2-style label-blind masked adaptation on commissioning stream,
-            # then freeze before independent target calibration/evaluation.
             adapted = source_model.clone()
             adapt_info = adapted.adapt_cycles(split.target_commissioning)
             adapted_row = _evaluate_frozen(
@@ -293,12 +235,7 @@ def main() -> None:
                 adaptation_info=adapt_info,
             )
             rows.append(adapted_row)
-
-            if (
-                not args.skip_online
-                and n_value == ONLINE_DIAGNOSTIC_N
-                and seed in ONLINE_DIAGNOSTIC_SEEDS
-            ):
+            if not args.skip_online and n_value == ONLINE_DIAGNOSTIC_N and seed in ONLINE_DIAGNOSTIC_SEEDS:
                 online = adapted.clone()
                 rows.append(_evaluate_online(
                     model=online,
@@ -308,14 +245,8 @@ def main() -> None:
                     n_value=n_value,
                     seed=seed,
                 ))
-
             _atomic_csv(pd.DataFrame(rows), SEED_RESULTS_PATH)
-            print(
-                f"E6 {done}/{total}: N={n_value} seed={seed} "
-                f"adapt recall={adapted_row['recall']:.3f} "
-                f"FPR={adapted_row['false_positive_rate']:.3f} "
-                f"AUROC={adapted_row['auroc']:.3f}"
-            )
+            print(f"E6 {done}/{total}: N={n_value} seed={seed} adapt recall={adapted_row['recall']:.3f} FPR={adapted_row['false_positive_rate']:.3f} AUROC={adapted_row['auroc']:.3f}")
 
     results = pd.DataFrame(rows)
     summary = _summary(results)
@@ -342,7 +273,7 @@ def main() -> None:
             "M2N2-CommissioningAdapt": "M2N2 masked self-training on target commissioning executions; frozen before target calibration/evaluation",
             "M2N2-Online": "continued label-blind adaptation during evaluation; empirical/oracle diagnostic only; no exact fixed-detector certification claim",
         },
-        "cycle_score_aggregation": "mean of channel-mean timestep reconstruction error over all windows/timesteps in one execution",
+        "cycle_score_aggregation": "99th percentile of channel-mean timestep reconstruction error over all windows/timesteps in one execution; mean available as a predeclared sensitivity via M2N2Config(cycle_score_quantile=None)",
         "online_diagnostic": {"N": ONLINE_DIAGNOSTIC_N, "seeds": list(ONLINE_DIAGNOSTIC_SEEDS)},
         "no_leakage": "anomaly labels never used for training/adaptation/calibration; online labels used only after scoring for metrics",
     }
